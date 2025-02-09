@@ -1,0 +1,6 @@
+api:
+  host_url: "https://www.soliscloud.com:13333"
+  content_type: "application/json"
+  verb: "POST"
+
+influx_url: "34.143.160.168"
