@@ -1,7 +1,10 @@
+"""
+Function for calling needed API endpoints
+"""
+
 import requests
 import api_header
 import settings
-import math
 import time
 
 
@@ -29,45 +32,23 @@ def _call_api(endpoint, body, max_retries=3):
     return None
 
 
-def _get_inverters_list(pageNo=1, pageSize=20):
-    """Returns details of all inverters"""
+def get_inverter_detail_list(pageNo=1, pageSize=20):
+    """Returns list of all inverter details"""
+    body = {"pageNo": pageNo, "pageSize": pageSize}
+
+    return _call_api("inverterDetailList", body)
+
+
+def get_inverter_list(pageNo=1, pageSize=20):
     body = {"pageNo": pageNo, "pageSize": pageSize}
 
     return _call_api("inverterList", body)
 
 
-def _get_inverter_num():
-    """Returns the total number of inverters installed"""
-    response = _get_inverters_list()
-    if response:
-        return response["data"]["inverterStatusVo"]["all"]
-
-    return None
-
-
-def get_all_sns():
-    """Returns list of all SNs or empty list on failure"""
-    total_num = _get_inverter_num()
-    if total_num is None:
-        return []
-
-    total_pages = math.ceil(total_num / 100)
-    sns = []
-
-    for i in range(total_pages):
-        inv_list = _get_inverters_list(i + 1, 100)
-        if not inv_list or "data" not in inv_list or "page" not in inv_list["data"]:
-            print(f"Skipping page {i+1} due to API error")
-            continue
-
-        for entry in inv_list["data"]["page"].get("records", []):
-            sns.append(entry.get("sn", "Unknown"))
-
-    return sns
-
-
 def get_inverter_details(sn):
-    """Returns details about single inverter"""
+    """
+    Returns details about single inverter
+    """
     body = {"sn": sn}
 
     return _call_api("inverterDetail", body)
