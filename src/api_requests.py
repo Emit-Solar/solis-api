@@ -28,7 +28,7 @@ def _get_inverter_num():
     return _get_inverters_list()["data"]["inverterStatusVo"]["all"]
 
 
-def _get_all_sns():
+def get_all_sns():
     """Returns list of all SNs"""
     total_num = _get_inverter_num()
     total_pages = math.ceil(total_num / 100)
@@ -40,3 +40,31 @@ def _get_all_sns():
             sns.append(entry["sn"])
 
     return sns
+
+
+def get_inverter_details(sn):
+    """Returns details about single inverter"""
+    body = {"sn": sn}
+
+    response = _call_api("inverterDetail", body)
+
+    if response["code"] == "0":
+        return response["data"]
+    else:
+        return response["code"]
+
+
+def get_inverter_day(sn, date):
+    """
+    Returns daily data for given inverter
+
+    Args:
+        sn (str): Inverter SN
+        date (str): Must be in YYYY-MM-DD
+
+    """
+    body = {"sn": sn, "time": date}
+
+    response = _call_api("inverterDay", body)
+
+    return response["data"]
