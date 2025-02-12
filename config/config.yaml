@@ -3,4 +3,7 @@ api:
   content_type: "application/json"
   verb: "POST"
 
-influx_url: "34.143.160.168"
+db:
+  influx_url: "34.143.160.168:8086"
+  influx_org: "Emit Solar"
+  influx_bucket: "solis"

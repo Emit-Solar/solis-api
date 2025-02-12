@@ -65,3 +65,12 @@ def get_station_id(sn):
         return inverter["data"]["stationId"]
 
     return None
+
+
+def get_station_name(sn):
+    inverter = api_requests.get_inverter_details(sn)
+
+    if inverter:
+        return inverter["data"]["stationName"]
+
+    return None

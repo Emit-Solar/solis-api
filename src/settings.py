@@ -20,5 +20,7 @@ VERB = config["api"]["verb"]
 API_KEYID = os.getenv("SOLIS_KEYID")
 API_KEYSECRET = os.getenv("SOLIS_KEYSECRET")
 
-INFLUX_URL = config["influx_url"]
+INFLUX_URL = config["db"]["influx_url"]
 INFLUX_TOKEN = os.getenv("INFLUX_TOKEN")
+INFLUX_ORG = config["db"]["influx_org"]
+INFLUX_BUCKET = config["db"]["influx_bucket"]
