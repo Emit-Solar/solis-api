@@ -35,11 +35,11 @@ def influx_write(point):
     client.close()
 
 
-def create_point(metrics_json, sn, stationId, ts_str):
+def create_point(metrics_json, tags, ts_str):
     ts = convert_timestamp_to_iso(ts_str)
     point_dict = {
         "measurement": "solis",
-        "tags": {"sn": sn, "stationId": stationId},
+        "tags": tags,
         "fields": metrics_json,
         "time": ts,
     }
