@@ -11,7 +11,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
-        logging.FileHandler(LOG_FILE),  # Log to file
+        logging.FileHandler(LOG_FILE, mode="a"),  # Log to file
     ],
 )
 
