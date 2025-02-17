@@ -2,7 +2,7 @@ import logging
 import os
 
 # Create logs directory if it doesn't exist
-LOG_DIR = "logs"
+LOG_DIR = "../logs"
 os.makedirs(LOG_DIR, exist_ok=True)
 
 # Configure logging
