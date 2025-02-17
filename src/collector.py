@@ -54,7 +54,7 @@ def fetch_data(sn, station_id, start_date, name, install_date):
         if not fetching_historical:
             date = datetime.today().strftime("%Y-%m-%d")
 
-            logger.info(f"Fetching data for {name} ({sn}) on {date}")
+        logger.info(f"Fetching data for {name} ({sn}) on {date}")
 
         day_data = None
         with semaphore:  # Limit concurrent API requests to 2 per second
@@ -101,6 +101,7 @@ def start_data_collection():
     # Batch up inverters to run requests concurrently (while respecting rate limit)
     for sn in sns:
         station_id = parse.get_station_id(sn)
+        name = parse.get_station_name(sn)
 
         install_date_list = parse.get_installation_date(station_id)
         if install_date_list:
@@ -109,13 +110,15 @@ def start_data_collection():
             logger.error(f"Skipping {sn}, no installation date found.")
             continue  # Skip if no install date is found
 
+        print(f"Searching InfluxDB for {name}")
         latest_ts = influx.influx_get_latest_ts(sn)
         if latest_ts:
+            print(f"{name} found.")
             start_date = latest_ts.strftime("%Y-%m-%d")
         else:
             start_date = install_date
 
-        name = parse.get_station_name(sn)
+        logger.info(f"Starting thread {sn} ({name}).")
         thread = threading.Thread(
             target=fetch_data,
             args=(sn, station_id, start_date, name, install_date),
