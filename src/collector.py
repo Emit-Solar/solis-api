@@ -46,7 +46,7 @@ def fetch_data(sn, station_id, start_date, name, install_date):
     date = start_date
 
     # Check if historical data needs to be fetched
-    fetching_historical = date < today
+    fetching_historical = date <= today
     logger.info(f"Fetching data for {name} ({sn}) from {start_date} onwards")
 
     while True:
