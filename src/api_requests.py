@@ -6,6 +6,7 @@ import requests
 import api_header
 import settings
 import time
+from logger import logger
 
 
 def _call_api(endpoint, body, max_retries=3):
@@ -20,7 +21,7 @@ def _call_api(endpoint, body, max_retries=3):
 
         # Error handling
         if resp_json["code"] != "0":
-            print(
+            logger.error(
                 f"Error {resp_json['code']} on {endpoint}: {resp_json['msg']}, Retrying..."
             )
             retries += 1
