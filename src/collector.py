@@ -40,21 +40,36 @@ def convert_metrics_to_influx_format(metrics, sn, station_id, name, install_date
     return fields, tags
 
 
-def fetch_data(sn, station_id, start_date, name, install_date):
+def fetch_data(sn, station_id, name, install_date):
     """Fetch historical data first, then switch to real-time mode."""
+
+    print(f"Searching InfluxDB for {name}")
+    latest_ts = influx.influx_get_latest_ts(sn)
+    if latest_ts:
+        print(f"{name} found.")
+        start_date = latest_ts.strftime("%Y-%m-%d")
+    else:
+        start_date = install_date
     today = datetime.today().strftime("%Y-%m-%d")
     date = start_date
 
     # Check if historical data needs to be fetched
     fetching_historical = date <= today
-    logger.info(f"Fetching data for {name} ({sn}) from {start_date} onwards")
+    logger.info(
+        "Fetching historial data.",
+        extra={"tags": {"sn": sn, "name": name, "start": start_date}},
+    )
 
     while True:
         # Use today's date in real-time mode
         if not fetching_historical:
             date = datetime.today().strftime("%Y-%m-%d")
 
-        logger.info(f"Fetching data for {name} ({sn}) on {date}")
+        else:
+            logger.info(
+                "Fetching data.",
+                extra={"tags": {"sn": sn, "name": name, "date": date}},
+            )
 
         day_data = None
         with semaphore:  # Limit concurrent API requests to 2 per second
@@ -91,7 +106,7 @@ def fetch_data(sn, station_id, start_date, name, install_date):
 
         # In real-time mode, keep fetching the latest data
         else:
-            time.sleep(0.5)  # Keep polling in real-time mode
+            time.sleep(300)  # Keep polling in real-time mode
 
 
 def start_data_collection():
@@ -102,26 +117,13 @@ def start_data_collection():
     for sn in sns:
         station_id = parse.get_station_id(sn)
         name = parse.get_station_name(sn)
-
         install_date_list = parse.get_installation_date(station_id)
+
         if install_date_list:
             install_date = install_date_list[0]  # First recorded date
-        else:
-            logger.error(f"Skipping {sn}, no installation date found.")
-            continue  # Skip if no install date is found
-
-        print(f"Searching InfluxDB for {name}")
-        latest_ts = influx.influx_get_latest_ts(sn)
-        if latest_ts:
-            print(f"{name} found.")
-            start_date = latest_ts.strftime("%Y-%m-%d")
-        else:
-            start_date = install_date
-
-        logger.info(f"Starting thread {sn} ({name}).")
-        thread = threading.Thread(
-            target=fetch_data,
-            args=(sn, station_id, start_date, name, install_date),
-            daemon=True,
-        )
-        thread.start()
+            logger.info("Starting thread.", extra={"tags": {"sn": sn, "name": name}})
+            thread = threading.Thread(
+                target=fetch_data,
+                args=(sn, station_id, name, install_date),
+            )
+            thread.start()

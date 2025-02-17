@@ -17,11 +17,10 @@ file_handler = logging.FileHandler(LOG_FILE, mode="a")
 file_handler.setLevel(logging.INFO)
 
 # Create a formatter
-formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s - %(tags)s")
 
 # Add the formatter to the handler
 file_handler.setFormatter(formatter)
 
 # Add the handler to the logger
 logger.addHandler(file_handler)
-
