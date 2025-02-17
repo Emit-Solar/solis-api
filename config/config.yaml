@@ -4,6 +4,6 @@ api:
   verb: "POST"
 
 db:
-  influx_url: "34.143.160.168:8086"
+  influx_url: "34.142.157.250:8086"
   influx_org: "Emit Solar"
-  influx_bucket: "solis"
+  influx_bucket: "api_data"
