@@ -46,3 +46,39 @@ def create_point(metrics_json, tags, ts_str):
 
     point = Point.from_dict(point_dict, WritePrecision.MS)
     return point
+
+
+def influx_get_latest_ts(sn):
+    """
+    Get latest timestamp of given SN
+    """
+    client = InfluxDBClient(
+        url=settings.INFLUX_URL,
+        token=settings.INFLUX_TOKEN,
+        org=settings.INFLUX_ORG,
+        timeout=100_000,
+    )
+
+    query_api = client.query_api()
+
+    query = f""" 
+        from(bucket: "{settings.INFLUX_BUCKET}")
+        |> range(start: 0, stop: now())
+        |> filter(fn: (r) => r["_measurement"] == "solis")
+        |> filter(fn: (r) => r.sn == "{sn}")
+        |> keep(columns: ["_time"])
+        |> sort(columns: ["_time"], desc: false)
+        |> last(column: "_time")
+        """
+    result = query_api.query(query)
+
+    latest_ts = None
+    for table in result:
+        for record in table.records:
+            latest_ts = record.get_time()
+            break
+
+    # Close the client
+    client.close()
+
+    return latest_ts
