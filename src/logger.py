@@ -7,13 +7,21 @@ os.makedirs(LOG_DIR, exist_ok=True)
 
 # Configure logging
 LOG_FILE = os.path.join(LOG_DIR, "solis_api.log")
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.FileHandler(LOG_FILE, mode="a"),  # Log to file
-    ],
-)
 
-# Get logger
+# Create a logger
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# Create a file handler
+file_handler = logging.FileHandler(LOG_FILE, mode="a")
+file_handler.setLevel(logging.INFO)
+
+# Create a formatter
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+
+# Add the formatter to the handler
+file_handler.setFormatter(formatter)
+
+# Add the handler to the logger
+logger.addHandler(file_handler)
+

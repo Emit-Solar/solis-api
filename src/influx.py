@@ -56,7 +56,7 @@ def influx_get_latest_ts(sn):
         url=settings.INFLUX_URL,
         token=settings.INFLUX_TOKEN,
         org=settings.INFLUX_ORG,
-        timeout=100000,
+        timeout=1000000,
     )
 
     query_api = client.query_api()
