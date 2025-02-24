@@ -65,12 +65,6 @@ def fetch_data(sn, station_id, name, install_date):
         if not fetching_historical:
             date = datetime.today().strftime("%Y-%m-%d")
 
-        else:
-            logger.info(
-                "Fetching data.",
-                extra={"tags": {"sn": sn, "name": name, "date": date}},
-            )
-
         day_data = None
         with semaphore:  # Limit concurrent API requests to 2 per second
             day_data = api_requests.get_inverter_day(sn, date)
@@ -101,7 +95,8 @@ def fetch_data(sn, station_id, name, install_date):
             if date >= today:
                 fetching_historical = False
                 logger.info(
-                    f"{name} completed historical data. Switching to real-time mode."
+                    "Switching to real-time.",
+                    extra={"tags": {"sn": sn, "name": name, "start": start_date}},
                 )
 
         # In real-time mode, keep fetching the latest data
