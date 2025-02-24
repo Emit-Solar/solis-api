@@ -32,6 +32,8 @@ def convert_metrics_to_influx_format(metrics, sn, station_id, name, install_date
     }
 
     for k, v in metrics.items():
+        if k == "timeStr":
+            continue
         if isinstance(v, int) or isinstance(v, float):
             fields[k] = float(v)  # Convert int to float to prevent type conflicts
         elif isinstance(v, str):
