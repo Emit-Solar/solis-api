@@ -2,16 +2,18 @@
 Collects real-time and historical data for all inverters using threading
 """
 
-from pytz import timezone
 import api_requests
 import time
 import parse
 import influx
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import threading
 from logger import logger
 
 semaphore = threading.Semaphore(2)  # Only 2 requests per second
+
+
+UNWANTED_TAGS = ["timeStr", "time"]
 
 
 def add_one_day_to_date(date_str):
@@ -32,7 +34,7 @@ def convert_metrics_to_influx_format(metrics, sn, station_id, name, install_date
     }
 
     for k, v in metrics.items():
-        if k == "timeStr":
+        if k in UNWANTED_TAGS:
             continue
         if isinstance(v, int) or isinstance(v, float):
             fields[k] = float(v)  # Convert int to float to prevent type conflicts
@@ -45,22 +47,23 @@ def convert_metrics_to_influx_format(metrics, sn, station_id, name, install_date
 def fetch_data(sn, station_id, name, install_date):
     """Fetch historical data first, then switch to real-time mode."""
 
-    print(f"Searching InfluxDB for {name}")
+    # Find and get latest record written to InfluxDB
     latest_ts = influx.influx_get_latest_ts(sn)
     if latest_ts:
-        print(f"{name} found.")
         start_date = latest_ts.strftime("%Y-%m-%d")
     else:
+        # otherwise start from the installation date
         start_date = install_date
     today = datetime.today().strftime("%Y-%m-%d")
     date = start_date
 
-    # Check if historical data needs to be fetched
+    # If data for station already exists, check if it is up to date
     fetching_historical = date <= today
-    logger.info(
-        "Fetching historial data.",
-        extra={"tags": {"sn": sn, "name": name, "start": start_date}},
-    )
+    if fetching_historical:
+        logger.info(
+            "Fetching historial data.",
+            extra={"tags": {"sn": sn, "name": name, "start": start_date}},
+        )
 
     while True:
         # Use today's date in real-time mode
@@ -72,20 +75,38 @@ def fetch_data(sn, station_id, name, install_date):
             day_data = api_requests.get_inverter_day(sn, date)
             time.sleep(0.5)  # Respect API rate limit (2 requests/sec)
 
+        # Find and create influx record for each row collected
         points = []
         if day_data and "data" in day_data:
+            # Get latest timestamp added
+            last_ts = influx.influx_get_latest_ts(sn)
+            if last_ts:
+                last_ts = last_ts.replace(second=0, microsecond=0)
+
+            # Parse through each row from API
             for day_metrics in day_data["data"]:
+                # compare retrieved timestamp with last_ts
                 ts = day_metrics.pop("dataTimestamp", None)
+                # convert to proper format
+                ts_secs = int(ts) / 1000
+                ts_dt = datetime.fromtimestamp(ts_secs, tz=timezone.utc).replace(
+                    second=0, microsecond=0
+                )
+
+                # if same timestamp, skip
+                if ts_dt == last_ts:
+                    last_ts = ts_dt
+                    continue
+
+                # otherwise create influx point
                 fields, tags = convert_metrics_to_influx_format(
                     day_metrics, sn, station_id, name, install_date
                 )
-                if "time" in tags:
-                    tags.pop("time")
-
                 if ts:
                     point = influx.create_point(fields, tags, ts)
                     points.append(point)
 
+        # Batch write entire day to Influx
         if points:
             influx.influx_write(points)
 
@@ -103,7 +124,7 @@ def fetch_data(sn, station_id, name, install_date):
 
         # In real-time mode, keep fetching the latest data
         else:
-            time.sleep(300)  # Keep polling in real-time mode
+            time.sleep(300)  # API is updated every 5 minutes
 
 
 def start_data_collection():
@@ -111,14 +132,18 @@ def start_data_collection():
     sns = parse.get_all_sns()
 
     # Batch up inverters to run requests concurrently (while respecting rate limit)
-    for sn in sns:
+    for i in range(len(sns)):
+        sn = sns[i]
         station_id = parse.get_station_id(sn)
         name = parse.get_station_name(sn)
         install_date_list = parse.get_installation_date(station_id)
 
         if install_date_list:
             install_date = install_date_list[0]  # First recorded date
-            logger.info("Starting thread.", extra={"tags": {"sn": sn, "name": name}})
+            logger.info(
+                f"Starting thread [{i}/{len(sns)}].",
+                extra={"tags": {"sn": sn, "name": name}},
+            )
             thread = threading.Thread(
                 target=fetch_data,
                 args=(sn, station_id, name, install_date),
