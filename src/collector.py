@@ -115,7 +115,7 @@ def fetch_data(sn, station_id, name, install_date):
             date = add_one_day_to_date(date)
 
             # If we reach today, switch to real-time mode
-            if date >= today:
+            if date > today:
                 fetching_historical = False
                 logger.info(
                     "Switching to real-time.",
