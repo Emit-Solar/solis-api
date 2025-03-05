@@ -69,6 +69,7 @@ def influx_get_latest_ts(sn):
         |> keep(columns: ["_time"])
         |> sort(columns: ["_time"], desc: false)
         |> last(column: "_time")
+        |> limit(n: 1000)
         """
     result = query_api.query(query)
 
