@@ -78,27 +78,11 @@ def fetch_data(sn, station_id, name, install_date):
         # Find and create influx record for each row collected
         points = []
         if day_data and "data" in day_data:
-            # Get latest timestamp added
-            last_ts = influx.influx_get_latest_ts(sn)
-            if last_ts:
-                last_ts = last_ts.replace(second=0, microsecond=0)
-
             # Parse through each row from API
             for day_metrics in day_data["data"]:
-                # compare retrieved timestamp with last_ts
                 ts = day_metrics.pop("dataTimestamp", None)
-                # convert to proper format
-                ts_secs = int(ts) / 1000
-                ts_dt = datetime.fromtimestamp(ts_secs, tz=timezone.utc).replace(
-                    second=0, microsecond=0
-                )
 
-                # if same timestamp, skip
-                if ts_dt == last_ts:
-                    last_ts = ts_dt
-                    continue
-
-                # otherwise create influx point
+                # create influx point
                 fields, tags = convert_metrics_to_influx_format(
                     day_metrics, sn, station_id, name, install_date
                 )
