@@ -66,9 +66,8 @@ def influx_get_latest_ts(sn):
         |> range(start: 0, stop: now())
         |> filter(fn: (r) => r["_measurement"] == "solis")
         |> filter(fn: (r) => r.sn == "{sn}")
-        |> keep(columns: ["_time"])
-        |> sort(columns: ["_time"], desc: false)
         |> last(column: "_time")
+        |> keep(columns: ["_time"])
         |> limit(n: 1000)
         """
     result = query_api.query(query)
