@@ -74,3 +74,17 @@ def get_station_name(sn):
         return inverter["data"]["stationName"]
 
     return None
+
+
+def get_day_fields(sn):
+    day_data = api_requests.get_inverter_day(sn, datetime.now().strftime("%Y-%m-%d"))
+
+    if day_data:
+        all_fields = day_data["data"][0]
+        fields = [
+            key for key, value in all_fields.items() if isinstance(value, (int, float))
+        ]
+
+        return fields
+
+    return None
