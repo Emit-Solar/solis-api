@@ -12,16 +12,15 @@ import json
 import parse
 import settings
 import requests
-from logger import logger
 
 PANEL_H = 8
 PANEL_W = 12
 
 
 def generate_panel(sn, field):
-    query = (
-        f'from(bucket: "inverter_api_test")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r["_measurement"] == "solis")\r\n  |> filter(fn: (r) => r._field == "{field}")\r\n  |> filter(fn: (r) => r["sn"] == "{sn}")\r\n  |> yield(name: "mean")\r\n\r\n',
-    )
+    query = f"""
+    from(bucket: "inverter_api_test")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r["_measurement"] == "solis")\r\n  |> filter(fn: (r) => r._field == "{field}")\r\n  |> filter(fn: (r) => r["sn"] == "{sn}")\r\n  |> yield(name: "mean")\r\n\r\n
+    """
 
     with open("panel_template.json", "r") as f:
         panel = json.load(f)
@@ -57,12 +56,20 @@ def generate_dashboard(sn, name):
 
 def write_dashboard(dashboard):
     url = f"{settings.GRAFANA_URL}/api/dashboards/db"
+
+    body = {
+        "dashboard": dashboard,
+        "folderUid": "aeffj1vubq22oe",
+        "message": "Created dashboard",
+        "overwrite": False,
+    }
+
     headers = {
         "Authorization": f"Bearer {settings.GRAFANA_TOKEN}",
         "Content-Type": "application/json",
     }
 
-    resp = requests.post(url, headers=headers, json=dashboard)
+    resp = requests.post(url, headers=headers, json=body)
 
     if resp.status_code == 200:
         return None
