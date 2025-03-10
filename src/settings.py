@@ -24,3 +24,6 @@ INFLUX_URL = config["db"]["influx_url"]
 INFLUX_TOKEN = os.getenv("INFLUX_TOKEN")
 INFLUX_ORG = config["db"]["influx_org"]
 INFLUX_BUCKET = config["db"]["influx_bucket"]
+
+GRAFANA_URL = config["grafana"]["url"]
+GRAFANA_TOKEN = os.getenv("GRAFANA_TOKEN")
