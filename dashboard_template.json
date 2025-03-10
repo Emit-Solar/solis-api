@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 3,
+  "id": null,
   "links": [],
   "panels": [],
   "preload": false,
@@ -35,7 +35,7 @@
   "timepicker": {},
   "timezone": "browser",
   "title": "solis test",
-  "uid": "",
+  "uid": null,
   "version": 4,
   "weekStart": ""
 }

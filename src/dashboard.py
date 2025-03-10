@@ -18,7 +18,7 @@ PANEL_H = 8
 PANEL_W = 12
 
 
-def generate_panel(sn, field, id):
+def generate_panel(sn, field):
     query = (
         f'from(bucket: "inverter_api_test")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r["_measurement"] == "solis")\r\n  |> filter(fn: (r) => r._field == "{field}")\r\n  |> filter(fn: (r) => r["sn"] == "{sn}")\r\n  |> yield(name: "mean")\r\n\r\n',
     )
@@ -26,20 +26,19 @@ def generate_panel(sn, field, id):
     with open("panel_template.json", "r") as f:
         panel = json.load(f)
         panel["targets"][0]["query"] = query
-        panel["id"] = id
         panel["title"] = field
 
         return panel
 
 
-def generate_dashboard(sn, name, id):
+def generate_dashboard(sn, name):
     fields = parse.get_day_fields(sn)
     panels = []
     if fields:
-        for field, id in enumerate(fields, start=1):
-            panel = generate_panel(sn, field, id)
-            x = 0 if id % 2 == 1 else PANEL_W
-            y = (id // 2) * PANEL_H
+        for field, i in enumerate(fields, start=1):
+            panel = generate_panel(sn, field)
+            x = 0 if i % 2 == 1 else PANEL_W
+            y = (i // 2) * PANEL_H
 
             panel["gridPos"] = {"h": PANEL_H, "w": PANEL_W, "x": x, "y": y}
 
@@ -49,7 +48,6 @@ def generate_dashboard(sn, name, id):
             dashboard = json.load(f)
             dashboard["panels"] = panels
             dashboard["title"] = name
-            dashboard["id"] = id
 
             return dashboard
 
