@@ -4,8 +4,6 @@ from logger import logger
 import dashboard
 import parse
 
-collector.start_data_collection()
-
 sns = parse.get_all_sns()
 
 for sn in sns:
@@ -17,6 +15,8 @@ for sn in sns:
         logger.error(f"Unable to create dashboard for {name}.")
     else:
         logger.info(f"Created dashboard for {name}.")
+
+collector.start_data_collection()
 
 while True:
     time.sleep(5)
