@@ -7,3 +7,6 @@ db:
   influx_url: "https://i.emitsolar.my"
   influx_org: "emitsolar"
   influx_bucket: "inverter_api_test"
+
+grafana:
+  url: "https://g.emitsolar.my"
