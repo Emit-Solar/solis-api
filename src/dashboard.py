@@ -35,9 +35,10 @@ def generate_dashboard(sn, name):
     fields = parse.get_day_fields(sn)
     panels = []
     if fields:
-        for field, i in enumerate(fields, start=1):
+        for i in range(len(fields)):
+            field = fields[i]
             panel = generate_panel(sn, field)
-            x = 0 if int(i) % 2 == 1 else PANEL_W
+            x = 0 if i % 2 == 1 else PANEL_W
             y = (i // 2) * PANEL_H
 
             panel["gridPos"] = {"h": PANEL_H, "w": PANEL_W, "x": x, "y": y}
