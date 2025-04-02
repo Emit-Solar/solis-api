@@ -7,30 +7,35 @@ import api_header
 import settings
 import time
 from logger import logger
+from requests.exceptions import ConnectTimeout
 
 
-def _call_api(endpoint, body, max_retries=3):
+def _call_api(endpoint, body):
     url = f"{settings.HOST_URL}/v1/api/{endpoint}"
     req_header = api_header.get_request_header(endpoint, body)
 
     retries = 0
 
-    while retries < max_retries:
-        resp = requests.post(url, headers=req_header, json=body)
-        resp_json = resp.json()
+    while True:
+        try:
+            resp = requests.post(url, headers=req_header, json=body)
+            resp_json = resp.json()
 
-        # Error handling
-        if resp_json["code"] != "0":
-            logger.error(
-                f"Error {resp_json['code']} on {endpoint}: {resp_json['msg']}, Retrying..."
-            )
+            # Error handling
+            if resp_json["code"] != "0":
+                logger.error(
+                    f"Error {resp_json['code']} on {endpoint}: {resp_json['msg']}, Retrying..."
+                )
+                retries += 1
+            else:
+                return resp_json
+        except ConnectTimeout:
             retries += 1
-        else:
-            return resp_json
-
-        time.sleep(2)
-
-    return None
+            delay = 2 ** (retries - 1)
+            logger.error(
+                f"Connection timeout on {endpoint}, Retrying in {delay} seconds..."
+            )
+            time.sleep(delay)
 
 
 def get_inverter_detail_list(pageNo=1, pageSize=20):
